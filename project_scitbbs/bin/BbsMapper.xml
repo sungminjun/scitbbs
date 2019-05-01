@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="server.DAO.BbsMapper">
+
+	<insert id="bbsWrite" parameterType="hashmap">
+		INSERT INTO
+		${boardName}(seqNo, writeId, subj, content)
+		VALUES(
+		${seqNo}
+		, #{writeId}
+		, #{subj}
+		, #{content}
+		)
+	</insert>
+
+	<!-- public ArrayList<BoardVO> bbsList(String boardName); -->
+	<select id="bbsList" resultType="BoardVO"
+		parameterType="hashmap">
+		SELECT
+		*
+		FROM
+		${boardName}
+		ORDER BY
+		seqNo DESC
+	</select>
+
+	<!-- public BoardVO bbsRead(BoardVO); -->
+	<select id="bbsRead" resultType="BoardVO"
+		parameterType="hashmap">
+		SELECT
+		*
+		FROM
+		${boardName}
+		WHERE
+		seqNo = #{seqNo}
+	</select>
+
+	<update id="bbsReadCnt" parameterType="BoardVO">
+		UPDATE
+		${boardName}
+		SET
+		counter = counter + 1
+		WHERE
+		seqNo = ${seqNo}
+	</update>
+
+	<!-- public BoardVO bbsEdit(BoardVO edit); -->
+	<update id="bbsEdit" parameterType="BoardVO" />
+
+	<!-- public int bbsDelete(BoardVO delete); -->
+	<insert id="bbsDelete" parameterType="hashmap">
+		INSERT INTO BOARDTRASH
+		SELECT * FROM ${boardName} WHERE seqNo = #{seqNo}
+	</insert>
+
+	<update id="bbsRenameTrash" parameterType="hashmap">
+		UPDATE ${boardName}
+		SET subj='삭제대기중인 게시물입니다.', content='삭제대기중인 게시물입니다.'
+		WHERE
+		seqNo=#{seqNo}
+	</update>
+
+	<delete id="bbsEraseTrash" parameterType="hashmap">
+		DELETE ${boardName}
+		WHERE seqNo=#{seqNo}
+	</delete>
+
+	<select id="recentNotice" resultType="BoardVO">
+		SELECT * FROM boardnotice
+		WHERE
+		writeDate >= sysdate-21
+		and seqNo = (SELECT max(seqNo) FROM boardnotice)
+	</select>
+
+	<select id="recentBoard" resultType="BoardVO">
+		SELECT * FROM (
+		SELECT * FROM boardfree union all
+		SELECT * FROM boardanony)
+		WHERE
+		(seqNo = (select max(seqNo) from boardanony where writeDate >= sysdate-3) and boardname = 'BOARDANONY')
+		or (seqNo = (select max(seqNo) from boardfree where writeDate >= sysdate-3) and boardname =
+		'BOARDFREE')
+	</select>
+
+
+	<!-- 이하 usersVO 대응 -->
+	<!-- 이하 usersVO 대응 -->
+	<!-- 이하 usersVO 대응 -->
+	<!-- 이하 usersVO 대응 -->
+
+
+	<insert id="reqJoin" parameterType="hashmap">
+		INSERT INTO
+		USERS(userIdNo,
+		userId, userPw, userName, userPhone, userPf)
+		VALUES(
+		userIdNoSeq.nextval
+		, #{userId}
+		, #{userPw}
+		, #{userName}
+		, #{userPhone}
+		,
+		#{userPf}
+		)
+	</insert>
+
+	<select id="chkDupl" resultType="String" parameterType="String">
+		SELECT
+		userId
+		FROM
+		USERS
+		WHERE
+		userId = #{param}
+	</select>
+
+	<select id="idName" resultType="String" parameterType="String">
+		SELECT
+		userName
+		FROM
+		USERS
+		WHERE
+		userId = #{param}
+	</select>
+
+	<update id="adjAuth" parameterType="hashmap">
+		UPDATE
+		users
+		SET
+		userAuth =
+		#{userAuth}
+		WHERE
+		userId = #{userId}
+	</update>
+
+	<update id="adjAuthByIdNo" parameterType="hashmap">
+		UPDATE
+		users
+		SET
+		userAuth
+		= #{userAuth}
+		WHERE
+		userIdNo = #{userIdNo}
+	</update>
+
+
+	<update id="updPf" parameterType="hashmap">
+		UPDATE
+		users
+		SET
+		userPf =
+		#{userPf}
+		WHERE
+		userId = #{userId}
+	</update>
+
+	<update id="reqLeave" parameterType="string">
+		UPDATE
+		users
+		SET
+		userPf =
+		'탈퇴신청중인 회원입니다.'
+		, userAuth = 0
+		WHERE
+		userId = #{param}
+	</update>
+
+	<delete id="removeUser" parameterType="int">
+		DELETE
+		users
+		WHERE
+		userIdNo =
+		#{userIdNo}
+		and userAuth = 0
+	</delete>
+
+	<select id="listUser" parameterType="int" resultType="UsersVO">
+		SELECT
+		*
+		FROM
+		users
+		WHERE
+		userAuth = #{value}
+	</select>
+
+	<select id="listAllUser" parameterType="int"
+		resultType="UsersVO">
+		SELECT
+		*
+		FROM
+		users
+	</select>
+
+	<select id="login" parameterType="hashmap" resultType="int">
+		SELECT
+		count(*)
+		FROM
+		users
+		WHERE
+		userId = #{userId}
+		and userPw = #{userPw}
+	</select>
+
+	<select id="chkAuth" parameterType="string" resultType="int">
+		SELECT
+		userAuth
+		FROM
+		users
+		WHERE
+		userId = #{param}
+	</select>
+
+
+	<select id="chkAuthByIdNo" parameterType="int" resultType="int">
+		SELECT
+		userAuth
+		FROM
+		users
+		WHERE
+		userIdNo = #{param}
+	</select>
+
+
+</mapper>
+

@@ -1,0 +1,160 @@
+18/11/25-27 
+DB연결 하지않고 VO만 이용한 prototype 작성
+socket 통신의 client와
+server 단에서 socket통신 받는 부분
+UI-MGR 구분 없이
+login 부분, 게시판 부분(목록읽기, 쓰기까지만, 내용읽기 미구현) 
+까지 구현한 상태.
+
+18/11/27
+치과진료로 작업x
+
+18/11/29 
+DBMS mybatis 구조 대충 이해함.
+구조x 사용법o
+
+(1) 먼저 생각할 것
+DB base 먼저 작성 > vanilla ui > 게시판 3종 (공지사항, 자유게시판, 익명게시판)
+DB base 작성 > vanilla ui 로 > 가입기능
+이후 게시판 뼈대 만들어 놓고 top menu, 게시판이동, 관리자 권한 나눠서 작성
+
+최소구현 기능
+접속 > 로그인화면 > guest login > 탑메뉴 > 권한별 게시판 접근여부 확인 > 가입신청 > 접속종료
+접속 > 로그인화면 > user login > 탑메뉴 > 권한별 게시판 접근여부 확인 > 접속종료
+접속 > 로그인화면 > sysop login > 탑메뉴 > 가입신청 목록 확인 > 승급처리 > 접속종료
+접속 > 로그인화면 > user login > 탑메뉴 > 권한별 게시판 접근여부 확인
+ > 글쓰기 > 글 쓰기 결과 확인(목록조회) > 접속종료
+
+로그인 후 top 화면에서 각 sub-menu화면으로 이동
+0 login - 로그인기능 
+1 top - help-c, quit-x, move(top, submenu)
+10 user - 11 join, 12 full list, 13 manage(modify authLevel only)  
+20 bbs - 21 공지 / 22 자유 / 23 익명
+//30 chat/memo - 31 chat
+
+페이지 [login, top, user, join, fulllist, manage, bbs, notice, free, anony //chat]
+	권한별 차등 notice(관리자만 쓰기), manage(user는자기권한만, 관리자는 전체인원)
+기본 10페이지 + 차등페이지 2페이지
+
+입력인식 [기본기능 help-c, quit-x, top, pf, move(submenuNo), p(previous menu)
+ //go, memo, kick] 
+	권한별 차등기능 pf
+	위치별 기능 p(이전메뉴저장var선언 후 이전메뉴로 이동) (게시판) move()
+		(게시판 기능) w, // m, n, subj 
+		(관리자 기능) up/down ..?
+		
+기타 변수
+current_user_id, current_user_auth, current_user_locat, current_user_prevlocat
+// chat_status, chat_room_status
+
+권한
+// 관리자 5, 일반유저 3, 가입요청 1, 탈퇴요청 0
+
+(2) 가능하면 구현하고 싶은 것
+게시판 페이지 넘기기 기능
+15line 이상일 경우 
+list의 경우 쪽 나누기 후 역순배정 (1...31 일 경우 31-17이 1page, 16-2가 2page...)
+content의 경우 쪽 나누기 후 정순배정 (1...31 일 경우 1-15가 1page, 16-30 2page...) 
+
+go 기능
+화면에서 go top 등으로 이동할 수 있도록
+
+memo 기능,
+발신자가 memo (rcvId) (content) 보내면
+memo db에는 sentId, rcvId, content, time이 들어가고
+rcvId에 알림을 보낸다.
+ 
+채팅방 기능,
+채팅방에 접속한 사람에게만 flag를 부여해
+flag가 있는 경우에만 broadcast를 한다.
+방장 권한) 강퇴
+일반 권한) 접속자 id리스트 출력
+
+(3) 발표 전 준비할 것
+DB구조 및 흐름도, 변수내용 정리,  
+
+18/11/30 
+진도상황
+java측 dao mapper interface 작성 완료
+
+18/12/02
+바닐라 메인클래스 완성
+board 목록읽기, 쓰기 완성
+
+* 내용읽기시에 조회수 +1 update하는 것 미구현
+* 내일 할일: users crud 기능, board update 및 휴지통, 완전삭제
+
+18/12/03
+수업시간 중 : 일단 조회수 +1, 삭제요청 +이동 관련 기능 두개로 구현
+vanillaMain 에서 돌아가는 기능 전부 구현 해두었음.
+* UI 덧붙여 나가면서 작업예정
+
+일과종료 후, 오후 09:23 기록 :
+ 바닐라 완성후 실제 코드에서 테스트하면서 UI 붙여나가는 중,
+ login 구현 끝났고, (22.login, 23.chkAuth, 16.userAuth)
+ 게시판 1.목록읽기, 2.글 읽기, 3.글 쓰기, 4.삭제요청 처리 (15.이름불러오기)ok
+ 
+
+* 내일할일
+ 게시판
+ 	/관리자권한	-- 6.쓰레기통 삭제 및 쓰레기통 접근 관련 기능
+ 유저
+ 	/guest권한	-- 13.가입신청 14.중복검사 
+ 	/일반권한	-- 17.pf수정 18.탈퇴신청 
+ 	/관리자권한 -- 19.탈퇴처리 20.부분목록읽기 21.전체목록읽기 
+ 	까지하면 일단락
+ 
+18/12/04
+ 질문할 것:
+ write메소드 내에서 seq 분배관련 문제 -- 사실 write method 호출시에 그냥 처리할 수 있지 않나?
+ 한글 입력시 NumforException 회피하는 문제 -- 방법없나?
+
+진도상황(점심) 
+ 	게시판
+ 		/관리자권한	-- 쓰레기통 접근관련 UI 조정 및 삭제기능 처리 완료
+ 	유저
+ 		/guest 권한	-- 가입신청 ok, 가입신청 완료하고 나올 때 어떻게 처리할지 
+ 					-- 중복검사 물론 완료
+ * 예정상황 (점심)
+ 	유저
+ 		/guest 권한	-- 가입신청 완료하고 나올 때 어떻게 처리할지
+	 	/일반권한	-- 17.pf수정 18.탈퇴신청 
+	 	/관리자권한 -- 19.탈퇴처리 20.부분목록읽기 21.전체목록읽기 
+ 	InputResponse 개선할 것 (특히, NumforException 개선 및 권한과 위치에 따른 매핑 조정)
+ 	시퀀스 분배관련 문제 개선할 것	
+ 
+
+ 진도상황(저녁)
+권한관리 조정	-- 0은 탈퇴신청중 / 1은 guest / 2는 회원가입신청중 / 3이 기본 / 5가 관리자
+시퀀스 해결		-- write메소드에서 권한별 분배처리 및 xml수정
+ 	유저
+		/guest 권한	-- 가입신청 완료하고 top으로 이동하는 것으로
+		/관리자권한	-- 탈퇴처리ok, 부분목록읽기ok, 승급처리ok,
+		  		
+ * 미해결 문제 (저녁)
+  	InputResponse 개선할 것 (특히, NumforException 개선 및 권한과 위치에 따른 매핑 조정)
+ 	유저/일반권한 pf수정, 탈퇴신청 확인하고 정리
+ 	전체목록읽기 붙이기
+ 		 
+ 18/12/05 
+ 작동하는 프로토 완성.
+ 두개의 VO(users, board)에 대해 Create, Read, Update, and Delete가 가능하며
+ 콘솔 기반 ui를 뿌려주고 키보드 입력을 통해 반응하도록 작성.
+  
+ usersVO에 가입신청(insert), 조회(select), 승급/탈퇴요청(update), 탈퇴(remove) 작동하며,
+ boardVO에 글쓰기(insert), 목록 및 내용조회(select), 삭제요청(update), 삭제(remove) 한다.
+ 
+ usersVO에 등록된 user_auth에 따라 반응을 다르게 하도록 만들었다.
+ 
+ 18/12/05, 19:39
+ 채팅방 및 쪽지 기능 구현 및 정리 완료. ** 수고하셨습니다. ** 
+ 
+ 12/12/06
+ 수업 중 발표
+ 
+ 18/12/07 19:08 
+ 기능추가 : 
+ TOP화면에 최근 공지사항, 최근 게시물 ( 자유게시판, 익명게시판 각1 ) 정보 가져와서 출력
+ 
+ 제출을 위한 readme.txt 작성을 할까말까 고민중
+ 
